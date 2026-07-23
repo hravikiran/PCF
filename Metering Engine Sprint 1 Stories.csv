@@ -1,0 +1,23 @@
+ID,Component,Track,Story,Description,Est (d),Owner,Start,End,Depends on,Status
+P1,Platform,Foundation,Repo/branch strategy & CI/CD pipelines,"Create/configure EP, Aggregator, ME repos; branch strategy; CI build + test pipelines; dev environment.",2,,Jul 29,Jul 30,-,Ready
+P2,Platform,Foundation,Shared event model & common libraries,"Canonical billing-event model, serialization, config & logging libs shared across components.",2,,Jul 31,Aug 3,P1,Ready
+P3,Platform,Data,Mongo schema finalization & creation,"Finalize billable / non_billable / rejected collections + master collection; create schemas.",2,,Aug 4,Aug 5,P2,Ready
+P4,Platform,Data,Identify & apply Mongo indexes,"Query patterns per component; define & apply indexes (eventId, aggregator, period, status).",1,,Aug 6,Aug 6,P3,Ready
+S1,Simulator,Simulator,Publish sample success billing events to Kafka,"Simulator publishes valid success billing events onto the Kafka topic; configurable count.",2,,Jul 29,Jul 30,P1,Ready
+S2,Simulator,Simulator,Publish negative / edge sample events,"Missing mandatory fields, bad date format, unknown aggregator/cluster - for validation tests.",2,,Jul 31,Aug 3,S1,Ready
+S3,Simulator,Simulator,Consume from Kafka -> write RAW_EVENTS to HPOS,"Simulator consumer that reads the topic and writes raw events to the HPOS RAW_EVENTS bucket.",2,,Aug 4,Aug 5,S1,Ready
+S4,Simulator,Simulator,Master-data seeder,"Seed bank details & mapping master data for enrichment / validation tests.",1,,Aug 6,Aug 6,P3,Ready
+S5,Simulator,Simulator,Late-arrival & duplicate-eventId generator,"Emit events with past event-time windows and duplicate eventIds for idempotency/replay tests.",2,,Aug 7,Aug 10,S1,Ready
+E1,Event Processor,EP,Kafka consumer + Consumer Group config,"Consumer wiring, single consumer group, partition ownership, config.",2,,Jul 29,Jul 30,P1,Ready
+E2,Event Processor,EP,HPOS client - batch insert primitive,"Reusable HPOS write primitive (batched PUT) with deterministic keys.",2,,Jul 31,Aug 3,E1,Ready
+E3,Event Processor,EP,HPOS client - batch retrieve & delete primitives,"List/GET by prefix + batch delete primitives (shared with Aggregator).",2,,Aug 4,Aug 5,E2,Ready
+E4,Event Processor,EP,Direct-to-HPOS write of RAW_EVENTS,"Consume -> write raw event as-is to HPOS, deterministic key by eventId.",2,,Aug 6,Aug 7,E2,Ready
+E5,Event Processor,EP,Offset commit after successful write,"Commit offset only after HPOS write ack (zero-loss ordering).",1,,Aug 10,Aug 10,E4,Ready
+E6,Event Processor,EP,Resiliency spike - pause/resume + backoff,"Circuit-breaker pause/resume on HPOS failure; retry with backoff.",1,,Aug 11,Aug 11,E4,Ready
+A1,Aggregator,Aggregator,Scheduler skeleton + grace window config,"Interval scheduler with configurable grace window (6h); run bookkeeping.",2,,Jul 29,Jul 30,P1,Ready
+A2,Aggregator,Aggregator,Bounded batch read from RAW_EVENTS,"Paginated, bounded batch listing/read from RAW_EVENTS (constant memory).",2,,Jul 31,Aug 3,A1;E3,Ready
+A3,Aggregator,Aggregator,Schema & mandatory-field validation,"Validate event schema and mandatory fields; mark outcomes.",2,,Aug 4,Aug 5,P2,Ready
+A4,Aggregator,Aggregator,Attribute data-format validation,"Validate attribute formats (e.g. date format) per spec.",1,,Aug 6,Aug 6,A3,Ready
+A5,Aggregator,Aggregator,Aggregator & Cluster validation,"Source-specific validation: aggregator validity and cluster checks.",2,,Aug 7,Aug 10,A3,Ready
+M1,Monetization,ME,NDM transfer spike / POC,"Prove NDM file transfer to ACO in a POC; capture config & failure signals.",2,,Jul 29,Jul 30,-,Ready
+M2,Monetization,ME,ACO file format & field mapping definition,"Define ACO file layout + mapping (bank data, Source Id / EVENTID / Cluster Id).",2,,Jul 31,Aug 3,M1,Ready
